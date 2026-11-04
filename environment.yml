@@ -5,3 +5,5 @@ dependencies:
   - r-tidyverse
   - r-readxl
   - r-ggrepel
+  - r-sf
+  - r-tmap
