@@ -78,6 +78,7 @@ ggplot(Kanazawa_land_price, aes(x = distance, y = land_price, color = land_use))
 ggsave("KanazawaLandPriceFunction.png")
 
 model1 <- lm(log(land_price) ~ distance, data = Kanazawa_land_price)
+# model1 <- lm(log(land_price) ~ distance, weights = land_price^2, data = Kanazawa_land_price)
 
 summary(model1)
 
