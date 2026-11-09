@@ -7,4 +7,5 @@ dependencies:
   - r-ggrepel
   - r-sf
   - r-tmap
+  - r-codetools
   - sqlite>=3.38  # ベース環境の古いsqlite（libsqlite3.soを同梱）との衝突回避

@@ -1,4 +1,13 @@
 #!/bin/bash
 set -e
 
+# RStudioセッションにはconda環境の環境変数が引き継がれないため、
+# PROJ・GDALのデータの場所をRの全体設定に書き込む
+ENV_PREFIX="${NB_PYTHON_PREFIX:-/srv/conda/envs/notebook}"
+cat >> "$(R RHOME)/etc/Renviron.site" <<EOF
+PROJ_DATA=${ENV_PREFIX}/share/proj
+GDAL_DATA=${ENV_PREFIX}/share/gdal
+EOF
+
+# 学生に見せない設定ファイルを削除
 rm -f README.md apt.txt environment.yml postBuild .gitignore
