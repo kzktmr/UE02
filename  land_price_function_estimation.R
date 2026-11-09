@@ -24,23 +24,33 @@ Ishikawa_land_price <-
     land_use = factor(land_use,      # 用途区分を因子型に 
       levels = c("000", "003", "005", "009", "020"), 
       labels = c("住宅地", "宅地見込地", "商業地", "工業地", "林地")
-    )
-  ) 
+    ),
+    land_use = fct_collapse(land_use, 住宅地 = c("住宅地", "宅地見込地")) # 「宅地見込地」を「住宅地」に統合
+  )
 
-Ishikawa_land_price
+Ishikawa_land_price |> st_drop_geometry() |> count(land_use)
 tm_shape(Ishikawa_land_price) + tm_symbols()
 
 # 金沢都市圏の選別
+# 都市雇用圏（2020年）による https://www.csis.u-tokyo.ac.jp/UEA/
 Kanazawa_city_code <- c(
-  "17201", "17209", "17210", "17212", 
-  "17324", "17361", "17365", "17386"
+  "17201", # 金沢市
+  "17209", # かほく市
+  "17210", # 白山市
+  "17212", # 野々市市
+  "17324", # 能美郡川北町
+  "17361", # 河北郡津幡町
+  "17365", # 河北郡内灘町
+  "17386"  # 羽咋郡宝達志水町
 )
 
 Kanazawa_land_price <- 
   Ishikawa_land_price |> 
   filter(city_code %in% Kanazawa_city_code) # filter関数で、自治体コード（L02_020）が金沢都市圏に含まれるデータだけ取り出す
 
-tm_shape(Kanazawa_land_price) + tm_symbols(fill = "land_price")
+Kanazawa_land_price |> st_drop_geometry() |> count(land_use)
+
+  tm_shape(Kanazawa_land_price) + tm_symbols(fill = "land_price")
 
 # 最も地価が高い地点を中心地とする----
 center <-
