@@ -108,4 +108,3 @@ y = "地価（万円／m²）"
 ) +
 theme_bw()
 
-ggsave("KanazawaLandPriceFunction.png")
