@@ -16,7 +16,6 @@ library(tmap)
 # 実行すると「replacing crs does not reproject data」という警告が出るが、問題ない
 Ishikawa_land_price <- 
   read_sf("data/L02-25_17.geojson") |> 
-  st_set_crs(6668) |>     # 座標系を指定（国土数値情報の仕様に従い、JGD2011の緯度経度）
   st_transform(6675) |>   # 距離を計算するため、平面直角座標系VII系に投影変換
   rename(                 # わかりやすい変数名にしておく
     land_price = L02_006, # 地価（円／m²）
