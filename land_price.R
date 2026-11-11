@@ -13,7 +13,6 @@ library(tmap)
 
 # 地価のデータを読み込む ----
 # 都道府県地価調査（2025年7月1日時点）、国土交通省「国土数値情報」
-# 実行すると「replacing crs does not reproject data」という警告が出るが、問題ない
 Ishikawa_land_price <- 
   read_sf("data/L02-25_17.geojson") |> 
   st_transform(6675) |>   # 距離を計算するため、平面直角座標系VII系に投影変換
@@ -31,6 +30,7 @@ Ishikawa_land_price <-
     land_use = fct_collapse(land_use, 住宅地 = c("住宅地", "宅地見込地")) # 「宅地見込地」を「住宅地」に統合
   )
 
+Ishikawa_land_price |> View()                                # 読み込んだデータの確認
 Ishikawa_land_price |> st_drop_geometry() |> count(land_use) # 用途区分ごとの地点数
 tm_shape(Ishikawa_land_price) + tm_symbols()                 # 地図で確認
 
@@ -75,7 +75,6 @@ Kanazawa_land_price <-
   mutate(distance = as.numeric(st_distance(geometry, center)[, 1]) / 1000) # 距離（km）を計算する
 
 Kanazawa_land_price |> select(distance, land_price) |> View() # 確認
-# Kanazawa_land_price |> write_rds("data/kanazawa_land_price.rds") # データを保存しておく
 
 # 回帰分析 ====
 
@@ -119,10 +118,6 @@ max(Kanazawa_land_price$distance)          # データの中で最も遠い基�
 model2 <- lm(log(land_price) ~ distance, data = Kanazawa_land_price)
 summary(model2)
 
-# 距離が1km離れたときの地価の変化率（%）
-b <- coef(model2)
-(exp(b["distance"]) - 1) * 100
-
 # 散布図と回帰直線（縦軸は対数目盛）
 ggplot(Kanazawa_land_price, aes(x = distance, y = land_price)) +
   geom_point(aes(color = land_use)) +
@@ -134,6 +129,10 @@ ggplot(Kanazawa_land_price, aes(x = distance, y = land_price)) +
     color = "用途区分"
   ) +
   theme_bw()
+
+# 距離が1km離れたときの地価の変化率（%）
+b <- coef(model2)
+(exp(b["distance"]) - 1) * 100
 
 # 二次関数のモデルと片対数モデルの比較（元の単位に戻して描く）
 pred <- tibble(distance = seq(0, max(Kanazawa_land_price$distance), length.out = 200))
