@@ -57,6 +57,21 @@ Kanazawa_land_price <-
 Kanazawa_land_price |> st_drop_geometry() |> count(land_use) # 用途区分ごとの地点数
 tm_shape(Kanazawa_land_price) + tm_symbols(fill = "land_price") # 地価の地図
 
+
+tile <- "https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png"
+
+# viewモード（拡大・移動できる地図）
+tmap_mode("view")
+tm_basemap(tile) +
+  tm_shape(Kanazawa_land_price) + tm_symbols(fill = "land_price")
+
+# plotモード（静的な地図）
+tmap_mode("plot")
+requireNamespace("maptiles") # FALSEなら environment.yml に r-maptiles の追加が必要
+tm_basemap(tile) +
+  tm_shape(Kanazawa_land_price) + tm_symbols(fill = "land_price")
+
+
 # 中心地と距離 ====
 
 # 最も地価が高い地点を中心地とする ----
