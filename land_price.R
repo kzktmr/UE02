@@ -9,6 +9,9 @@ library(tidyverse)
 library(sf)
 library(tmap)
 
+tmap_mode("view") # 地図を拡大・移動できるモードにする
+tile <- "https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png" # 背景地図（出典：国土地理院「地理院タイル」淡色地図）
+
 # データの読み込み ====
 
 # 地価のデータを読み込む ----
@@ -30,9 +33,10 @@ Ishikawa_land_price <-
     land_use = fct_collapse(land_use, 住宅地 = c("住宅地", "宅地見込地")) # 「宅地見込地」を「住宅地」に統合
   )
 
-Ishikawa_land_price |> View()                                # 読み込んだデータの確認
+Ishikawa_land_price                                          # 読み込んだデータの確認
 Ishikawa_land_price |> st_drop_geometry() |> count(land_use) # 用途区分ごとの地点数
-tm_shape(Ishikawa_land_price) + tm_symbols()                 # 地図で確認
+tm_basemap(tile) +
+  tm_shape(Ishikawa_land_price) + tm_symbols()               # 地図で確認
 
 # 金沢都市圏の基準地を取り出す ----
 # 都市雇用圏（2020年基準、中心市：金沢市）による https://www.csis.u-tokyo.ac.jp/UEA/
@@ -55,22 +59,8 @@ Kanazawa_land_price <-
   )
 
 Kanazawa_land_price |> st_drop_geometry() |> count(land_use) # 用途区分ごとの地点数
-tm_shape(Kanazawa_land_price) + tm_symbols(fill = "land_price") # 地価の地図
-
-
-tile <- "https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png"
-
-# viewモード（拡大・移動できる地図）
-tmap_mode("view")
 tm_basemap(tile) +
-  tm_shape(Kanazawa_land_price) + tm_symbols(fill = "land_price")
-
-# plotモード（静的な地図）
-tmap_mode("plot")
-requireNamespace("maptiles") # FALSEなら environment.yml に r-maptiles の追加が必要
-tm_basemap(tile) +
-  tm_shape(Kanazawa_land_price) + tm_symbols(fill = "land_price")
-
+  tm_shape(Kanazawa_land_price) + tm_symbols(fill = "land_price") # 地価の地図
 
 # 中心地と距離 ====
 
@@ -81,7 +71,8 @@ center <-
 
 center |> st_drop_geometry() |> select(L02_022, land_use, land_price) # 中心地の所在地と地価
 
-tm_shape(Kanazawa_land_price) + tm_symbols(fill = "land_price") +
+tm_basemap(tile) +
+  tm_shape(Kanazawa_land_price) + tm_symbols(fill = "land_price") +
   tm_shape(center) + tm_symbols(fill = "red") # 赤い点が中心地
 
 # 中心地から各地点までの距離を計算し、distance列に格納 ----
@@ -128,6 +119,18 @@ b["distance"] + 2 * b["I(distance^2)"] * c(1, 5, 10) # 中心地から1km、5km�
 # 頂点の距離
 -b["distance"] / (2 * b["I(distance^2)"]) # 頂点の距離（km）
 max(Kanazawa_land_price$distance)          # データの中で最も遠い基準地の距離（km）
+
+# 教科書との比較：都市計画区域外の基準地も含めて推定する
+# （再開用データを読み込んだ人は、Ishikawa_land_price と center がないので、ここは飛ばす）
+Kanazawa_land_price_all <-
+  Ishikawa_land_price |>
+  filter(city_code %in% Kanazawa_city_code) |> # 都市計画区域外の基準地も含める
+  mutate(distance = as.numeric(st_distance(geometry, center)[, 1]) / 1000)
+
+model1_all <- lm(land_price ~ distance + I(distance^2), data = Kanazawa_land_price_all)
+b <- coef(model1_all)
+b                                          # 係数（教科書：-1.994, 0.041）
+-b["distance"] / (2 * b["I(distance^2)"]) # 頂点の距離（km）
 
 # 片対数モデル ----
 model2 <- lm(log(land_price) ~ distance, data = Kanazawa_land_price)
